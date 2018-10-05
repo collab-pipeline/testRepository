@@ -3,6 +3,8 @@ version: 0.1
 phases:
   build:
     commands:
+      - apt-get update
+      - apt-get install zip
       - zip -r TestLambda.zip ./TestLambda/*
       #- tar jcf build/myApp-$(date +%Y%m%d%H%m%S).tar.bz2 .eslintrc.js .gitignore README.md buildspec.yml package.json serverless.yml src test
       #- npm install -g serverless
