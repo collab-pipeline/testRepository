@@ -1,0 +1,68 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'Test template for Lambda deploy'
+
+Parameters:
+
+  LambdaName:
+    Description: Lambda name
+    Type: String
+    AllowedPattern: "[A-z0-9]+"
+      
+Resources:
+
+  LambdaRole:
+    Type: AWS::IAM::Role
+    Properties:
+        AssumeRolePolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+            - Effect: Allow
+              Principal:
+                Service:
+                - lambda.amazonaws.com
+              Action:
+              - sts:AssumeRole
+        RoleName: !Join [ "", [ !Ref LambdaName,"-Deploy","-Role"] ]
+        Policies:
+          - PolicyName: !Join [ "", [ !Ref LambdaName,"-Deploy","-Policy"] ]
+            PolicyDocument:
+                Version: '2012-10-17'
+                Statement:
+                - Effect: Allow
+                  Action:
+                  - "logs:CreateLogGroup"
+                  - "logs:CreateLogStream"
+                  - "logs:PutLogEvents"
+                  Resource: 
+                  - "arn:aws:logs:*:*:*"
+                - Effect: Allow
+                  Action:
+                  - "s3:*"
+                  Resource: 
+                  - "arn:aws:s3:::collab-lambda-deploy"
+                  - "arn:aws:s3:::collab-lambda-deploy/*"
+        Path: "/"
+
+  TestFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Join [ "", [ !Ref LambdaName] ]
+      Code:
+        S3Bucket: "collab-lambda-deploy"
+        S3Key: !Join [ "", [ !Ref LambdaName, ".zip" ] ]
+      #  ZipFile: 
+      #      !Sub |
+      #        import json
+      #        import os
+      #        import boto3
+      #        import logging
+      #        def lambda_handler(event, context):
+      #            return {
+      #                "statusCode": 200,
+      #                "body": json.dumps('Hello from Lambda!!')
+      #            }
+      Handler: index.lambda_handler
+      Role:
+        Fn::GetAtt: [ LambdaRole , "Arn" ]
+      Runtime: python3.6
+      Timeout: 60
